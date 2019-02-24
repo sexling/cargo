@@ -40,16 +40,15 @@ const listContainer = document.getElementById(listContainerString);
 
 const state = {
 	originalText: null,
-	isEditModeOn: false
+	isEditModeOn: false,
+	inputLength: 1,
+	isfirstTimeEditMode: true
 };
 
-const hideCharCount = (e) => {
+const hideCharCount = () => {
 	const hideString = rmSelector(css.class.hide);
-	// console.log(e);
 
-	maxLengthIndicator.classList.add('WHHHY');
 	maxLengthIndicator.classList.add('hide');
-	maxLengthIndicator.classList.add('hid');
 	console.log(maxLengthIndicator);
 };
 
@@ -58,19 +57,44 @@ const showCharCount = () => {
 	maxLengthIndicator.classList.remove(hideString);
 };
 
-const countTextInsideInput = () => {
+const countTextInsideInput = (e = {}) => {
 	const maxChar = 22;
-	const inputLength = mainInput.value.length;
-	const charRemaining = maxChar - inputLength;
 
-	maxLengthIndicator.textContent = charRemaining;
+	if (state.isEditModeOn) {
+		const inputLength = mainInput.value.length || 1;
+		const charRemaining = maxChar - inputLength;
+		state.inputLength = inputLength;
+		console.log(state.inputLength);
 
-	!(inputLength + 1) ? hideCharCount() : showCharCount();
+		maxLengthIndicator.textContent = charRemaining;
+
+		if (e.keyCode !== 13) {
+			!inputLength ? hideCharCount() : showCharCount();
+		}
+	} else {
+		const inputLength = mainInput.value.length + 1;
+		const charRemaining = maxChar - inputLength;
+		state.inputLength = inputLength;
+		console.log(state.inputLength);
+
+		maxLengthIndicator.textContent = charRemaining;
+
+		if (e.keyCode !== 13) {
+			!inputLength ? hideCharCount() : showCharCount();
+		}
+	}
+};
+
+const decrementStateInputLength = () => {
+	if (state.inputLength === 1) {
+		return null;
+	}
+	state.inputLength -= 1;
 };
 
 const countTextInsideInput_KEYDOWN = (e) => {
 	if (mainInput.value && e.keyCode === 13) {
-		hideCharCount(e);
+		hideCharCount();
 		return true;
 	}
 	if (e.keyCode !== 8) {
@@ -78,15 +102,17 @@ const countTextInsideInput_KEYDOWN = (e) => {
 	}
 
 	const maxChar = 22;
-	const inputLength = mainInput.value.length;
+	// decrementStateInputLength();
+	state.inputLength -= 1;
+	const inputLength = state.inputLength;
 	// to be honest I'm confused with the solution to add 2 to fix character count when pressing backspace
 
-	const charRemaining = maxChar - inputLength + 2;
+	const charRemaining = maxChar - inputLength;
 	console.log(inputLength);
 
 	maxLengthIndicator.textContent = charRemaining;
 
-	inputLength === 1 ? hideCharCount() : showCharCount();
+	inputLength < 1 ? hideCharCount() : showCharCount();
 };
 
 const shortenTextAddEllispsis = (element) => {
@@ -126,7 +152,7 @@ const editElement = () => {
 };
 
 const addListByInput = (e) => {
-	countTextInsideInput();
+	countTextInsideInput(e);
 	if (e.target.value.trim() && e.keyCode === 13) {
 		state.isEditModeOn ? editElement() : addElement();
 
@@ -289,9 +315,7 @@ const setButtonToEdit = (e) => {
 		const listBtnEdit = e.target;
 		const parent = listBtnEdit.parentNode.parentNode;
 		const listContent = parent.querySelector(css.class.listContent);
-		mainInput.value = listContent.textContent;
-
-		countTextInsideInput();
+		mainInput.value = state.originalText;
 
 		mainBtn.textContent = 'Edit';
 		mainBtn.classList.add(editColorString);
@@ -299,6 +323,7 @@ const setButtonToEdit = (e) => {
 		mainInput.focus();
 		toggleListEditColor(e);
 		state.isEditModeOn = true;
+		countTextInsideInput();
 	}
 };
 
